@@ -1,0 +1,750 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Command Mapper — NLP demo</title>
+  <style>
+    :root {
+      --bg0: #080a0d;
+      --bg1: #0f1318;
+      --surface: #141a22;
+      --surface2: #1a222d;
+      --border: #2a3441;
+      --text: #e8edf4;
+      --muted: #8b98a8;
+      --dim: #5c6b7d;
+      --accent: #38bdf8;
+      --accent-dim: rgba(56, 189, 248, 0.15);
+      --ok: #4ade80;
+      --warn: #fbbf24;
+      --bad: #f87171;
+      --font: "Segoe UI", ui-sans-serif, system-ui, -apple-system, sans-serif;
+      --mono: ui-monospace, "Cascadia Code", "Consolas", monospace;
+      --radius: 12px;
+      --shadow: 0 1px 0 rgba(255,255,255,.04) inset, 0 12px 40px rgba(0,0,0,.45);
+    }
+
+    * { box-sizing: border-box; }
+    html, body { height: 100%; }
+    body {
+      margin: 0;
+      font-family: var(--font);
+      background: var(--bg0);
+      color: var(--text);
+      line-height: 1.55;
+      background-image:
+        radial-gradient(ellipse 120% 80% at 50% -30%, rgba(56, 189, 248, 0.12), transparent),
+        linear-gradient(180deg, var(--bg1) 0%, var(--bg0) 100%);
+      min-height: 100vh;
+    }
+
+    .shell {
+      max-width: 920px;
+      margin: 0 auto;
+      padding: 2rem 1.25rem 3rem;
+    }
+
+    .top {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 1rem;
+      margin-bottom: 1.75rem;
+    }
+
+    .brand {
+      display: flex;
+      flex-direction: column;
+      gap: 0.35rem;
+    }
+
+    .brand h1 {
+      margin: 0;
+      font-size: 1.65rem;
+      font-weight: 650;
+      letter-spacing: -0.03em;
+      line-height: 1.2;
+    }
+
+    .brand p {
+      margin: 0;
+      color: var(--muted);
+      font-size: 0.95rem;
+      max-width: 36rem;
+    }
+
+    .pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      padding: 0.35rem 0.65rem;
+      border-radius: 999px;
+      font-size: 0.72rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      color: var(--dim);
+      white-space: nowrap;
+    }
+
+    .pill i {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: var(--ok);
+      box-shadow: 0 0 8px var(--ok);
+    }
+
+    .samples {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+      margin-bottom: 1.25rem;
+    }
+
+    .samples span {
+      font-size: 0.75rem;
+      color: var(--dim);
+      width: 100%;
+      margin-bottom: 0.15rem;
+    }
+
+    .chip {
+      border: 1px solid var(--border);
+      background: var(--surface);
+      color: var(--text);
+      padding: 0.4rem 0.75rem;
+      border-radius: 999px;
+      font-size: 0.82rem;
+      cursor: pointer;
+      transition: border-color 0.15s, background 0.15s;
+    }
+
+    .chip:hover {
+      border-color: var(--accent);
+      background: var(--accent-dim);
+    }
+
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 1.35rem 1.4rem;
+      box-shadow: var(--shadow);
+    }
+
+    .card h2 {
+      margin: 0 0 1rem;
+      font-size: 0.72rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: var(--dim);
+    }
+
+    label {
+      display: block;
+      font-size: 0.8rem;
+      color: var(--muted);
+      margin-bottom: 0.4rem;
+      font-weight: 500;
+    }
+
+    textarea {
+      width: 100%;
+      min-height: 100px;
+      resize: vertical;
+      background: var(--bg0);
+      color: var(--text);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 0.85rem 1rem;
+      font-size: 0.95rem;
+      font-family: var(--font);
+      line-height: 1.5;
+      margin-bottom: 1rem;
+      transition: border-color 0.15s, box-shadow 0.15s;
+    }
+
+    textarea:focus {
+      outline: none;
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px var(--accent-dim);
+    }
+
+    select {
+      width: 100%;
+      background: var(--bg0);
+      color: var(--text);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 0.65rem 0.85rem;
+      font-size: 0.9rem;
+      margin-bottom: 1.1rem;
+      cursor: pointer;
+    }
+
+    select:focus {
+      outline: none;
+      border-color: var(--accent);
+    }
+
+    .row-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.65rem;
+      align-items: center;
+      margin-top: 0.25rem;
+    }
+
+    button.btn {
+      border: none;
+      border-radius: 10px;
+      padding: 0.65rem 1.15rem;
+      font-size: 0.9rem;
+      font-weight: 600;
+      font-family: inherit;
+      cursor: pointer;
+      transition: transform 0.08s, filter 0.15s, opacity 0.15s;
+    }
+
+    button.btn:active { transform: scale(0.98); }
+    button.btn:disabled {
+      opacity: 0.45;
+      cursor: not-allowed;
+    }
+
+    button.primary {
+      background: linear-gradient(180deg, #4fc3f7 0%, var(--accent) 100%);
+      color: #041018;
+      box-shadow: 0 2px 12px rgba(56, 189, 248, 0.35);
+    }
+
+    button.primary:hover:not(:disabled) {
+      filter: brightness(1.06);
+    }
+
+    button.ghost {
+      background: transparent;
+      color: var(--text);
+      border: 1px solid var(--border);
+    }
+
+    button.ghost:hover:not(:disabled) {
+      border-color: var(--muted);
+      background: rgba(255,255,255,.03);
+    }
+
+    .hint {
+      font-size: 0.78rem;
+      color: var(--dim);
+      margin-left: auto;
+    }
+
+    #confirm-box {
+      margin-top: 1.15rem;
+      padding: 1rem 1.1rem;
+      border-radius: 10px;
+      border: 1px solid rgba(251, 191, 36, 0.35);
+      background: rgba(251, 191, 36, 0.06);
+    }
+
+    #confirm-box p {
+      margin: 0 0 0.65rem;
+      color: var(--warn);
+      font-size: 0.88rem;
+    }
+
+    .chk {
+      display: flex;
+      gap: 0.55rem;
+      align-items: flex-start;
+      font-size: 0.82rem;
+      color: var(--muted);
+      margin-bottom: 0.75rem;
+    }
+
+    .chk input { margin-top: 0.2rem; }
+
+    button.warn-btn {
+      background: rgba(251, 191, 36, 0.2);
+      color: var(--warn);
+      border: 1px solid rgba(251, 191, 36, 0.45);
+      width: 100%;
+      padding: 0.6rem;
+    }
+
+    .hidden { display: none !important; }
+
+    /* Result area */
+    .result-grid {
+      margin-top: 1.5rem;
+      display: grid;
+      gap: 1rem;
+    }
+
+    .summary {
+      display: grid;
+      gap: 0.85rem;
+    }
+
+    .kv {
+      display: grid;
+      grid-template-columns: 120px 1fr;
+      gap: 0.5rem 1rem;
+      font-size: 0.88rem;
+      align-items: start;
+    }
+
+    @media (max-width: 520px) {
+      .kv { grid-template-columns: 1fr; }
+    }
+
+    .kv dt {
+      margin: 0;
+      color: var(--dim);
+      font-weight: 600;
+    }
+
+    .kv dd {
+      margin: 0;
+      color: var(--text);
+      word-break: break-word;
+    }
+
+    .intent-pill {
+      display: inline-block;
+      padding: 0.2rem 0.55rem;
+      border-radius: 6px;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      font-family: var(--mono);
+      font-size: 0.82rem;
+    }
+
+    .risk {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.35rem;
+      padding: 0.25rem 0.6rem;
+      border-radius: 6px;
+      font-size: 0.78rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+
+    .risk.low { background: rgba(74, 222, 128, 0.12); color: var(--ok); }
+    .risk.medium { background: rgba(251, 191, 36, 0.12); color: var(--warn); }
+    .risk.high { background: rgba(248, 113, 113, 0.12); color: var(--bad); }
+    .risk.critical { background: rgba(248, 113, 113, 0.22); color: #fecaca; }
+
+    .cmd-box {
+      position: relative;
+      background: var(--bg0);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 0.85rem 1rem;
+      font-family: var(--mono);
+      font-size: 0.85rem;
+      line-height: 1.45;
+      color: var(--ok);
+      word-break: break-all;
+    }
+
+    .cmd-box.empty {
+      color: var(--dim);
+      font-style: italic;
+    }
+
+    button.copy {
+      position: absolute;
+      top: 0.5rem;
+      right: 0.5rem;
+      font-size: 0.72rem;
+      padding: 0.35rem 0.55rem;
+      border-radius: 6px;
+      border: 1px solid var(--border);
+      background: var(--surface2);
+      color: var(--muted);
+      cursor: pointer;
+      font-family: inherit;
+    }
+
+    button.copy:hover {
+      color: var(--text);
+      border-color: var(--muted);
+    }
+
+    .bar {
+      height: 6px;
+      border-radius: 3px;
+      background: var(--surface2);
+      overflow: hidden;
+      margin-top: 0.25rem;
+    }
+
+    .bar > i {
+      display: block;
+      height: 100%;
+      background: linear-gradient(90deg, var(--accent), #818cf8);
+      border-radius: 3px;
+      transition: width 0.35s ease;
+    }
+
+    details.raw {
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      background: var(--bg0);
+      overflow: hidden;
+    }
+
+    details.raw summary {
+      padding: 0.65rem 1rem;
+      cursor: pointer;
+      font-size: 0.78rem;
+      color: var(--muted);
+      font-weight: 600;
+      list-style: none;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    details.raw summary::-webkit-details-marker { display: none; }
+
+    details.raw pre {
+      margin: 0;
+      padding: 0.85rem 1rem 1rem;
+      font-family: var(--mono);
+      font-size: 0.75rem;
+      line-height: 1.5;
+      color: var(--muted);
+      overflow: auto;
+      max-height: 320px;
+      border-top: 1px solid var(--border);
+    }
+
+    .empty-hint {
+      text-align: center;
+      padding: 2rem 1rem;
+      color: var(--dim);
+      font-size: 0.9rem;
+    }
+
+    .empty-hint strong { color: var(--muted); }
+
+    .foot {
+      margin-top: 2rem;
+      padding-top: 1.25rem;
+      border-top: 1px solid var(--border);
+      font-size: 0.78rem;
+      color: var(--dim);
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.75rem;
+      justify-content: space-between;
+    }
+
+    .foot code {
+      font-family: var(--mono);
+      font-size: 0.76rem;
+      color: var(--muted);
+    }
+
+    .toast {
+      position: fixed;
+      bottom: 1.25rem;
+      right: 1.25rem;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      color: var(--text);
+      padding: 0.65rem 1rem;
+      border-radius: 10px;
+      font-size: 0.85rem;
+      box-shadow: var(--shadow);
+      opacity: 0;
+      transform: translateY(8px);
+      transition: opacity 0.2s, transform 0.2s;
+      pointer-events: none;
+      z-index: 50;
+    }
+
+    .toast.show {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  </style>
+</head>
+<body>
+  <div class="shell">
+    <header class="top">
+      <div class="brand">
+        <h1>Command Mapper</h1>
+        <p>
+          Type a plain-English system task. The backend classifies intent, pulls entities,
+          and suggests a shell command. Nothing runs automatically — copy what you need.
+        </p>
+      </div>
+      <div class="pill"><i></i> Read-only demo</div>
+    </header>
+
+    <div class="samples">
+      <span>Try an example</span>
+      <button type="button" class="chip" data-text="list files in the current folder">List files</button>
+      <button type="button" class="chip" data-text="show running processes">Processes</button>
+      <button type="button" class="chip" data-text="print working directory">Current path</button>
+      <button type="button" class="chip" data-text="delete file old_notes.txt">Delete file</button>
+      <button type="button" class="chip" data-text="copy config.json to config.backup.json">Copy file</button>
+    </div>
+
+    <section class="card">
+      <h2>Input</h2>
+      <label for="utterance">What do you want to do?</label>
+      <textarea id="utterance" placeholder="Example: delete file report.pdf"></textarea>
+
+      <label for="target_os">Command style</label>
+      <select id="target_os" aria-label="Target OS for generated command">
+        <option value="">Match this computer</option>
+        <option value="nt">Windows (cmd-style)</option>
+        <option value="posix">macOS / Linux</option>
+      </select>
+
+      <div class="row-actions">
+        <button type="button" class="btn primary" id="btn-run">Generate command</button>
+        <button type="button" class="btn ghost" id="btn-nlu">NLU details only</button>
+        <span class="hint">High-risk actions need an extra confirm step.</span>
+      </div>
+
+      <div id="confirm-box" class="hidden">
+        <p id="confirm-msg"></p>
+        <label class="chk">
+          <input type="checkbox" id="confirm-ack" />
+          I understand this could be destructive. Show the approved mapping.
+        </label>
+        <button type="button" class="btn warn-btn" id="btn-confirmed">Confirm and show command</button>
+      </div>
+    </section>
+
+    <div class="result-grid">
+      <section class="card">
+        <h2>Output</h2>
+        <div id="summary-empty" class="empty-hint">
+          <strong>No run yet.</strong><br />
+          Enter text above or tap an example, then <strong>Generate command</strong>.
+        </div>
+        <div id="summary" class="summary hidden"></div>
+        <details class="raw hidden" id="raw-wrap">
+          <summary>Technical JSON</summary>
+          <pre id="output"></pre>
+        </details>
+      </section>
+    </div>
+
+    <footer class="foot">
+      <span>Audit log: <code>logs/audit.log</code></span>
+      <span>API: <code>POST /api/command</code> · <code>POST /api/interpret</code></span>
+    </footer>
+  </div>
+
+  <div id="toast" class="toast" role="status">Copied</div>
+
+  <script>
+    const ta = document.getElementById('utterance');
+    const targetOs = document.getElementById('target_os');
+    const confirmBox = document.getElementById('confirm-box');
+    const confirmMsg = document.getElementById('confirm-msg');
+    const confirmAck = document.getElementById('confirm-ack');
+    const summaryEl = document.getElementById('summary');
+    const summaryEmpty = document.getElementById('summary-empty');
+    const rawWrap = document.getElementById('raw-wrap');
+    const outPre = document.getElementById('output');
+    const toast = document.getElementById('toast');
+
+    document.querySelectorAll('.chip').forEach((btn) => {
+      btn.addEventListener('click', () => {
+        ta.value = btn.getAttribute('data-text') || '';
+        ta.focus();
+      });
+    });
+
+    function toastMsg(msg) {
+      toast.textContent = msg;
+      toast.classList.add('show');
+      setTimeout(() => toast.classList.remove('show'), 1800);
+    }
+
+    function setLoading(loading) {
+      document.getElementById('btn-run').disabled = loading;
+      document.getElementById('btn-nlu').disabled = loading;
+    }
+
+    function riskClass(level) {
+      const v = (level || 'low').toLowerCase();
+      if (v === 'critical') return 'critical';
+      if (v === 'high') return 'high';
+      if (v === 'medium') return 'medium';
+      return 'low';
+    }
+
+    function showRaw(obj) {
+      outPre.textContent = JSON.stringify(obj, null, 2);
+      rawWrap.classList.remove('hidden');
+    }
+
+    function renderInterpret(data) {
+      summaryEmpty.classList.add('hidden');
+      const conf = Math.round((data.confidence || 0) * 100);
+      summaryEl.innerHTML = `
+        <dl class="kv">
+          <dt>Intent</dt><dd><span class="intent-pill">${escapeHtml(data.intent)}</span></dd>
+          <dt>Confidence</dt><dd>${conf}%
+            <div class="bar"><i style="width:${Math.min(100, conf)}%"></i></div>
+          </dd>
+          <dt>Entities</dt><dd><span style="font-family:var(--mono);font-size:0.82rem;color:var(--muted);">${escapeHtml(JSON.stringify(data.entities || {}))}</span></dd>
+        </dl>
+      `;
+      summaryEl.classList.remove('hidden');
+    }
+
+    function renderCommand(data) {
+      summaryEmpty.classList.add('hidden');
+      const conf = Math.round((data.confidence || 0) * 100);
+      const risk = riskClass(data.risk_level);
+      const cmd = data.command;
+      const ambiguous = data.ambiguous;
+      const blocked = data.blocked_until_confirmation;
+      const cmdHtml = ambiguous || !cmd
+        ? `<div class="cmd-box empty">${escapeHtml(data.explanation || 'No command mapped.')}</div>`
+        : `<div class="cmd-box" style="padding-right:4.5rem">${escapeHtml(cmd)}
+            <button type="button" class="copy" id="btn-copy">Copy</button></div>`;
+
+      summaryEl.innerHTML = `
+        <dl class="kv">
+          <dt>Intent</dt><dd><span class="intent-pill">${escapeHtml(data.intent)}</span></dd>
+          <dt>Match</dt><dd>${conf}% <div class="bar"><i style="width:${Math.min(100, conf)}%"></i></div></dd>
+          <dt>Risk</dt><dd><span class="risk ${risk}">${escapeHtml(data.risk_level || 'low')}</span>
+            ${blocked ? ' <span style="color:var(--warn);font-size:0.82rem;">· confirmation required</span>' : ''}
+          </dd>
+          <dt>Command</dt><dd>${cmdHtml}</dd>
+        </dl>
+        <p style="margin:0;font-size:0.85rem;color:var(--muted);">${escapeHtml(data.explanation || '')}</p>
+      `;
+      summaryEl.classList.remove('hidden');
+
+      const copyBtn = document.getElementById('btn-copy');
+      if (copyBtn && cmd) {
+        copyBtn.addEventListener('click', async () => {
+          try {
+            await navigator.clipboard.writeText(cmd);
+            toastMsg('Command copied');
+          } catch {
+            toastMsg('Select and copy manually');
+          }
+        });
+      }
+    }
+
+    function escapeHtml(s) {
+      if (s == null) return '';
+      const d = document.createElement('div');
+      d.textContent = String(s);
+      return d.innerHTML;
+    }
+
+    async function postJson(url, body) {
+      const r = await fetch(url, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body),
+      });
+      if (!r.ok) {
+        const t = await r.text();
+        throw new Error(t || r.statusText);
+      }
+      return r.json();
+    }
+
+    document.getElementById('btn-nlu').onclick = async () => {
+      const text = ta.value.trim();
+      if (!text) {
+        toastMsg('Type something first');
+        return;
+      }
+      setLoading(true);
+      try {
+        const data = await postJson('/api/interpret', { text });
+        showRaw(data);
+        renderInterpret(data);
+        confirmBox.classList.add('hidden');
+      } catch (e) {
+        summaryEmpty.classList.add('hidden');
+        summaryEl.classList.remove('hidden');
+        summaryEl.innerHTML = `<p style="color:var(--bad);margin:0;">${escapeHtml(String(e))}</p>`;
+        rawWrap.classList.add('hidden');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    async function runCommand(userConfirmed) {
+      const text = ta.value.trim();
+      if (!text) {
+        toastMsg('Type something first');
+        return;
+      }
+      const body = { text, user_confirmed: userConfirmed };
+      const v = targetOs.value;
+      if (v) body.target_os = v;
+      const data = await postJson('/api/command', body);
+      showRaw(data);
+      renderCommand(data);
+      if (data.requires_confirmation && !userConfirmed) {
+        confirmBox.classList.remove('hidden');
+        confirmMsg.textContent = data.safety_reason || 'This action needs confirmation.';
+      } else {
+        confirmBox.classList.add('hidden');
+        confirmAck.checked = false;
+      }
+    }
+
+    document.getElementById('btn-run').onclick = async () => {
+      const text = ta.value.trim();
+      if (!text) {
+        toastMsg('Type something first');
+        return;
+      }
+      setLoading(true);
+      try {
+        await runCommand(false);
+      } catch (e) {
+        summaryEmpty.classList.add('hidden');
+        summaryEl.classList.remove('hidden');
+        summaryEl.innerHTML = `<p style="color:var(--bad);margin:0;">${escapeHtml(String(e))}</p>`;
+        rawWrap.classList.add('hidden');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    document.getElementById('btn-confirmed').onclick = async () => {
+      if (!confirmAck.checked) {
+        toastMsg('Check the box to confirm');
+        return;
+      }
+      setLoading(true);
+      try {
+        await runCommand(true);
+      } catch (e) {
+        summaryEl.innerHTML = `<p style="color:var(--bad);margin:0;">${escapeHtml(String(e))}</p>`;
+      } finally {
+        setLoading(false);
+      }
+    };
+  </script>
+</body>
+</html>
